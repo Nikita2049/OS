@@ -28,11 +28,7 @@ public class MyThread {
 	}
 
 	public boolean needTime() {
-		if (maxTime > currentTime) {
-			return true;
-		} else {
-			return false;
-		}
+		return maxTime > currentTime;
 	}
 
 	public String getInfo() {

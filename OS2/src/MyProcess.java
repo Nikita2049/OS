@@ -32,9 +32,7 @@ public class MyProcess implements Comparable<MyProcess> {
 	}
 
 	public boolean isEmpty() {
-		if (myThreads.size() > 0)
-			return false;
-		return true;
+		return myThreads.size() <= 0;
 	}
 
 	public int getResultTime() {
@@ -50,11 +48,7 @@ public class MyProcess implements Comparable<MyProcess> {
 	}
 
 	public boolean isHaveTime() {
-		if (getMaxTime() > getResultTime()) {
-			return true;
-		} else {
-			return false;
-		}
+		return getMaxTime() > getResultTime();
 	}
 
 	public void makeProcess(int quant) {
