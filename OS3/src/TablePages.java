@@ -1,23 +1,31 @@
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class TablePages {
-	private ArrayList<Page> pagesRecords;
-	public ArrayList<Page> getPagesRecords() {
+
+	private LinkedList<Page> pagesRecords;
+	
+	public TablePages() {
+		pagesRecords = new LinkedList<Page>();
+	}
+	
+	public LinkedList<Page> getPagesRecords(){
 		return pagesRecords;
 	}
-	public void setPagesRecords(ArrayList<Page> pagesRecords) {
-		this.pagesRecords = pagesRecords;
-	}
-	public TablePages() {
-		pagesRecords = new ArrayList<Page>();
-	}
-	public Page get(int index) {
-		return pagesRecords.get(index);
-	}
-	public int size() {
+	
+	public int Size() {
 		return pagesRecords.size();
 	}
+	
+	public Page Get(int index) {
+		return pagesRecords.get(index);
+	}
+
 	public void add(Page page) {
 		pagesRecords.add(page);
+	}
+
+	public void setPagesRecords(LinkedList<Page> pagesRecords) {
+		this.pagesRecords = pagesRecords;
 	}
 }
