@@ -1,44 +1,15 @@
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.Scanner;
 
 public class Main {
-	private static ArrayList<Process> Processes = new ArrayList<Process>();
-	private static Random rand = new Random();
-	private static int quant = 5;
 
-	public static void main(String[] args) {
-		create();
-		start();
-	}
-
-	private static void start() {
-		if (quant < 1) {
-			System.out.println("Êâàíò âðåìåíè ìåíüøå 1");
-			return;
-		}
-		while (!Processes.isEmpty()) {
-			int sizeProcesses = Processes.size();
-			for (int i = 0; i < sizeProcesses; i++) {
-				if (Processes.get(i).isNeedTime()) {
-					Processes.get(i).makeProcess(quant);
-					PhysicalMemory.Out();
-				} else {
-					Processes.remove(i);
-		  			sizeProcesses = Processes.size();
-					i--;
-				}
-			}
-		}
-		System.out.println("Âñå ïðîöåññû âûïîëíåíû");
-	}
-
-	private static void create() {
-		for (int i = 0; i < rand.nextInt(10) + 1; i++) {
-			ArrayList<String> date = new ArrayList<String>();
-			for (int j = 0; j < rand.nextInt(20) + 1; j++) {
-				date.add("" + i);
-			}
-			Processes.add(new Process(date,i));
-		}
-	}
+    public static void main(String[] args) {   	
+        Operation operation = new Operation(2048, 512);
+        int pages[] = {3, 0, 4, 2, 5, 7, 6};        
+        for(int i = 0; i < pages.length; i++){
+		      if (pages[i] >= 0 && pages[i] < operation.getTableVirtualPagesSize()){
+		    	  System.out.println("Ã‚Ã¢Ã¥Ã¤Â¸Ã­ Ã¨Ã­Ã¤Ã¥ÃªÃ± Ã±Ã²Ã°Ã Ã­Ã¨Ã¶Ã» Ã¢ Ã²Ã Ã¡Ã«Ã¨Ã¶Ã¥ Ã±Ã²Ã°Ã Ã­Ã¨Ã¶: " + pages[i]);
+		    	  operation.insertIntoPhysicalMemory(pages[i]);
+		      }
+	     }
+    }
 }

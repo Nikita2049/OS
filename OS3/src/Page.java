@@ -1,20 +1,33 @@
 public class Page {
-	private String data = "";
-	private int frequency=0;
+    private boolean availability;
+    private int indexRealPage;    
+    private boolean r;
 
-	public Page(String data) {
-		this.data = data;
-	}
+    public Page(boolean availability){
+        this.availability = availability;
+    }
 
-	public String getData() {
-		return data;
-	}
+    public boolean isAvailability() {
+        return availability;
+    }
 
-	public int getFrequency() {
-		return frequency;
-	}
+    public int getIndexRealPage() {
+        return indexRealPage;
+    }
 
-	public void use() {
-		frequency++;
-	}
+    public void setIndexRealPage(int indexRealPage) {
+        this.indexRealPage = indexRealPage;
+    }
+
+    public void setAvailability(boolean availability) {
+        this.availability = availability;
+    }
+    
+    public void setR(boolean r) {
+        this.r = r;
+    }
+    
+    public boolean isR() {
+        return r;
+    }
 }
