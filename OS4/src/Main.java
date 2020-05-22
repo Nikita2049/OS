@@ -1,29 +1,37 @@
-import java.awt.Color;
 import java.awt.EventQueue;
-import java.awt.SystemColor;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.border.LineBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JTree;
+import javax.swing.JPanel;
+
+import java.awt.Color;
+
+import javax.swing.JButton;
+import javax.swing.JEditorPane;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.JTextField;
+import javax.swing.JLabel;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
 public class Main {
+
 	private JFrame frame;
-	private JTextField textField;
-	private JTextField textField_1;
-	private File file;
-	private JTextField textField_2;
+	public static int diskSize = 500;
+	static int sectorSize = 10;
+	Disk disk;
+	private JTextField tFName;
+	private JTextField tFSize;
+	private Map<DefaultMutableTreeNode, File> dict;
+	JTree jTree;
+
 	/**
 	 * Launch the application.
 	 */
@@ -39,195 +47,241 @@ public class Main {
 			}
 		});
 	}
+
 	/**
 	 * Create the application.
 	 */
 	public Main() {
 		initialize();
+		Main();
 	}
+
+	private void Main() {
+		disk = new Disk(diskSize / sectorSize);
+		dict = new HashMap<DefaultMutableTreeNode, File>();
+	}
+
+	public void addNewItem(File f, Object top) {
+		DefaultTreeModel model = (DefaultTreeModel) jTree.getModel();
+		Object obj = top;
+		if (obj != null) {
+			DefaultMutableTreeNode sel = (DefaultMutableTreeNode) obj;
+			if (sel.isRoot()) {
+				DefaultMutableTreeNode tmp = new DefaultMutableTreeNode(
+						f.getName() + "-" + f.getSize());
+
+				model.insertNodeInto(tmp, sel, sel.getChildCount());
+				dict.put(tmp, f);
+			}
+			jTree.expandPath(new TreePath(sel.getPath()));
+		}
+
+	}
+
+	public void removeItem() {
+		DefaultTreeModel model = (DefaultTreeModel) jTree.getModel();
+		Object obj = jTree.getLastSelectedPathComponent();
+		if (obj != null) {
+			DefaultMutableTreeNode sel = (DefaultMutableTreeNode) obj;
+			if (!sel.isRoot()) {
+				dict.remove(sel);
+				model.removeNodeFromParent(sel);
+			}
+		}
+	}
+
 	/**
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.getContentPane().setForeground(Color.BLACK);
-		frame.setBounds(100, 100, 867, 360);
+		frame.setBounds(100, 100, 852, 445);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 
-		JPanel panel = new Manager();
-		panel.setBorder(new LineBorder(new Color(0, 0, 255)));
-		panel.setBackground(SystemColor.inactiveCaption);
-		panel.setBounds(12, 13, 484, 288);
+		DefaultMutableTreeNode top = new DefaultMutableTreeNode("ROOT");
+		jTree = new JTree(top);
+		jTree.setShowsRootHandles(true);
+		jTree.setBounds(632, 13, 190, 368);
+		frame.getContentPane().add(jTree);
+
+		Panel panel = new Panel();
+		panel.setBackground(Color.WHITE);
+		panel.setBounds(10, 10, 400, 200);
 		frame.getContentPane().add(panel);
 
-		final DefaultListModel<String> list2 = new DefaultListModel<String>();
-		JList<String> list = new JList<String>(list2);
-		list.setBorder(new LineBorder(new Color(0, 0, 0)));
-		list.setBorder(new LineBorder(new Color(0, 0, 255)));
-		list.setBackground(SystemColor.inactiveCaption);
-		list.addListSelectionListener(new ListSelectionListener() {
-			public void valueChanged(ListSelectionEvent arg0) {
-				String s = (String) list.getSelectedValue();
-				if (file != null) {
-					Place[] ps = file.getNode().getpositions();
-					for (int i = 0; i < ps.length; i++) {
-						Manager.setMemoryPoint(ps[i].I, ps[i].J, 2);
-					}
-				}
-				File f = Changes.getfile(s);
-				if (f != null) {
-					Place[] ps = f.getNode().getpositions();
-					if (ps != null) {
-						for (int i = 0; i < ps.length; i++) {
-							Manager.setMemoryPoint(ps[i].I, ps[i].J, 3);
-						}
-					}
-					panel.repaint();
-					file = f;
-				}
-			}
-		});
-		list.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent evt) {
-				if (evt.getClickCount() == 2) {
-					int index = list.locationToIndex(evt.getPoint());
-					JOptionPane.showMessageDialog(null, file.getNode().toStr());
-
-				}
-			}
-		});
-		list.setBounds(712, 13, 125, 288);
-		frame.getContentPane().add(list);
-
-		JButton btnCreate = new JButton(" ");
-		btnCreate.addActionListener(new ActionListener() {
+		JButton btnCreateFile = new JButton("CreateFile");
+		btnCreateFile.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				list.removeAll();
-				list2.clear();
-				Manager.setFree();
-				String str = textField.getText();
-				if (Integer.parseInt(str) % 4 != 0 && str != "") {
-					JOptionPane.showMessageDialog(null,
-							" ");
-				} else {
-					Manager.startup(Integer.parseInt(str));				
+
+				try {
+					String name = tFName.getText();
+					int size = Integer.valueOf(tFSize.getText());
+					if (name != "" && size > 0) {
+
+						File f = new File(name, size);
+						addNewItem(f, top);
+						tFName.setText("");
+						tFSize.setText("");
+					} else {
+						throw new Exception("Заполните все поля");
+					}panel.repaint();
+				} catch(ExFull exf){
+					JOptionPane.showMessageDialog(null, exf.getMessage());
+					System.exit(0);
 				}
-				textField.setText("");
+				catch (Exception ex) {
+					
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+				}
+				
+			}
+		});
+		btnCreateFile.setBounds(232, 318, 119, 25);
+		frame.getContentPane().add(btnCreateFile);
+
+		JButton btnDelete = new JButton("Delete");
+		btnDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+
+				DefaultTreeModel model = (DefaultTreeModel) jTree.getModel();
+				Object obj = jTree.getLastSelectedPathComponent();
+				if (obj != null) {
+					DefaultMutableTreeNode sel = (DefaultMutableTreeNode) obj;
+					File f = dict.get(sel);
+					f.delete();
+				}
+				panel.repaint();
+				removeItem();
+
+			}
+		});
+		btnDelete.setBounds(363, 318, 119, 25);
+		frame.getContentPane().add(btnDelete);
+
+		JButton btnCreatecatalog = new JButton("CreateCatalog");
+		btnCreatecatalog.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				try {
+					String name = tFName.getText();
+					//int size = Integer.valueOf(tFSize.getText());
+					if (name != "") {
+
+						File f = new File(name, 1, true);
+						addNewItem(f, top);
+						tFName.setText("");
+						tFSize.setText("");
+					} else {
+						throw new Exception("Заполните все поля");
+					}panel.repaint();
+				} catch(ExFull exf){
+					JOptionPane.showMessageDialog(null, exf.getMessage());
+					System.exit(0);
+				}
+				catch (Exception ex) {
+					
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+				}
+				
 				panel.repaint();
 			}
 		});
-		btnCreate.setBounds(508, 101, 148, 23);
-		frame.getContentPane().add(btnCreate);
+		btnCreatecatalog.setBounds(232, 356, 119, 25);
+		frame.getContentPane().add(btnCreatecatalog);
 
-		textField = new JTextField();
-		textField.setBounds(508, 68, 86, 20);
-		frame.getContentPane().add(textField);
-		textField.setColumns(10);
-
-		JButton btnAdd = new JButton(" ");
-		btnAdd.addActionListener(new ActionListener() {
+		JButton btnMove = new JButton("Move");
+		btnMove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				int size = Integer.parseInt(textField_1.getText());
-				if (textField_2.getText().trim().length() > 0) {
-					try {
-						if (size % 4 != 0) {
-							while (size % 4 != 0) {
-								size++;
-							}
-						}
-						if (size % 4 == 0) {
-							String name = textField_2.getText();
-							if (name != null) {
-								Boolean add = Manager.addFile(name, size);
-								if (add) {
-									list2.addElement(name);
-									list.setModel(list2);
-								}
-								panel.repaint();
-							}
-						} else {
-							JOptionPane.showMessageDialog(null,
-									" ");
-						}
-					} catch (Exception e) {
-						JOptionPane.showMessageDialog(null, " ");
+				try {
+					DefaultTreeModel model = (DefaultTreeModel) jTree
+							.getModel();
+					Object obj = jTree.getLastSelectedPathComponent();
+					if (obj != null) {
+						DefaultMutableTreeNode sel = (DefaultMutableTreeNode) obj;
+						File f = dict.get(sel);
+						File f2 = new File(f.getName(), f.getSize());
+						addNewItem(f2, top);
 					}
-				} else {
-					JOptionPane.showMessageDialog(null,
-							" ");
+					if (obj != null) {
+						DefaultMutableTreeNode sel = (DefaultMutableTreeNode) obj;
+						File f = dict.get(sel);
+						f.delete();
+					}
+					panel.repaint();
+					removeItem();
+				} catch(ExFull exf){
+					JOptionPane.showMessageDialog(null, exf.getMessage());
+					System.exit(0);
 				}
-				textField_2.setText("");
-				textField_1.setText("");
+				catch (Exception ex) {
+					
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+				}
 			}
 		});
-		btnAdd.setBounds(518, 205, 148, 23);
-		frame.getContentPane().add(btnAdd);
+		btnMove.setBounds(363, 356, 119, 25);
+		frame.getContentPane().add(btnMove);
 
-		JButton btnCopy = new JButton(" ");
+		JButton btnCopy = new JButton("Copy");
 		btnCopy.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (textField_2.getText().trim().length() > 0) {
-					String name = textField_2.getText();
-					Boolean add = Manager.addFile(name + " ", Changes
-							.getfile(name).getNode().fileSize());
-					if (add) {
-						list2.addElement(name + " ");
-						list.setModel(list2);
+				try {
+					DefaultTreeModel model = (DefaultTreeModel) jTree
+							.getModel();
+					Object obj = jTree.getLastSelectedPathComponent();
+					if (obj != null) {
+						DefaultMutableTreeNode sel = (DefaultMutableTreeNode) obj;
+						File f = dict.get(sel);
+						File f2 = new File(f.getName(), f.getSize());
+						addNewItem(f2, top);
 					}
 					panel.repaint();
-					textField_2.setText("");
-				} else {
-					JOptionPane.showMessageDialog(null,
-							" ");
+				} catch(ExFull exf){
+					JOptionPane.showMessageDialog(null, exf.getMessage());
+					System.exit(0);
+				}
+				catch (Exception ex) {
+					
+					JOptionPane.showMessageDialog(null, ex.getMessage());
 				}
 			}
 		});
-		btnCopy.setBounds(516, 241, 150, 23);
+		btnCopy.setBounds(511, 318, 97, 25);
 		frame.getContentPane().add(btnCopy);
 
-		JButton btnDelete = new JButton(" ");
-		btnDelete.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (textField_2.getText().trim().length() > 0) {
-					String name = textField_2.getText();
-					Manager.Delete(name);
-					file = null;
-					list2.removeElement(name);
-					list.setModel(list2);
-					panel.repaint();
-					textField_2.setText("");
-				} else {
-					JOptionPane.showMessageDialog(null,
-							" ");
-				}
-			}
-		});
-		btnDelete.setBounds(518, 277, 148, 23);
-		frame.getContentPane().add(btnDelete);
+		tFName = new JTextField();
+		tFName.setBounds(104, 319, 116, 22);
+		frame.getContentPane().add(tFName);
+		tFName.setColumns(10);
 
-		textField_1 = new JTextField();
-		textField_1.setBounds(621, 137, 89, 20);
-		frame.getContentPane().add(textField_1);
-		textField_1.setColumns(10);
-
-		JLabel lblNewLabel = new JLabel(
-				"\u0420\u0430\u0437\u043C\u0435\u0440 \u0444\u0430\u0439\u043B\u0430:");
-		lblNewLabel.setBounds(507, 139, 102, 16);
+		JLabel lblNewLabel = new JLabel("name");
+		lblNewLabel.setBounds(22, 319, 56, 16);
 		frame.getContentPane().add(lblNewLabel);
 
-		JLabel lblNewLabel_1 = new JLabel(
-				"\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0444\u0430\u0439\u043B\u0430:");
-		lblNewLabel_1.setBounds(508, 176, 116, 16);
+		JLabel lblNewLabel_1 = new JLabel("size");
+		lblNewLabel_1.setBounds(22, 365, 56, 16);
 		frame.getContentPane().add(lblNewLabel_1);
 
-		textField_2 = new JTextField();
-		textField_2.setBounds(621, 170, 89, 22);
-		frame.getContentPane().add(textField_2);
-		textField_2.setColumns(10);
+		tFSize = new JTextField();
+		tFSize.setBounds(104, 359, 116, 22);
+		frame.getContentPane().add(tFSize);
+		tFSize.setColumns(10);
 
-		JLabel lblNewLabel_2 = new JLabel(" ");
-		lblNewLabel_2.setBounds(608, 27, 100, 16);
-		frame.getContentPane().add(lblNewLabel_2);
+		JButton btnChoose = new JButton("Choose");
+		btnChoose.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				DefaultTreeModel model = (DefaultTreeModel) jTree.getModel();
+				Object obj = jTree.getLastSelectedPathComponent();
+				if (obj != null) {
+					DefaultMutableTreeNode sel = (DefaultMutableTreeNode) obj;
+					File f = dict.get(sel);
+					f.choose();
+				}
+				panel.repaint();
+			}
+		});
+		btnChoose.setBounds(511, 356, 97, 25);
+		frame.getContentPane().add(btnChoose);
 	}
 }
